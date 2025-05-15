@@ -4,6 +4,8 @@ import numpy as np
 
 
 st.title("Fintruth - About")
+st.markdown("# Conoce el proyecto")
+st.divider()
 st.markdown("## ¿Por qué es un problema?")
 st.divider()
 st.markdown('### Baja educación financiera en México')
