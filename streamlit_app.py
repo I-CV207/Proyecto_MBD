@@ -10,6 +10,9 @@ pages = {
         st.Page("page_articulos.py", title="Articulos"),
         st.Page("page_simulador.py", title="Simula tu ahorro"),
     ],
+     "BILLI": [
+        st.Page("page_billi.py", title="Preguntale a BILLI"),
+     ],
 }
 
 pg = st.navigation(pages)
