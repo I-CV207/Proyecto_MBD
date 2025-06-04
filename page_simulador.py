@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # ---- Page Configuration ----
-st.set_page_config(page_title="Fintruth - Simulador de Ahorro", layout="centered")
+#st.set_page_config(page_title="Fintruth - Simulador de Ahorro", layout="centered")
 
 # ---- Header ----
 st.title("💰 Fintruth - Simulador de Ahorro")
@@ -42,4 +42,3 @@ st.line_chart(df.set_index("Año"))
 final_amount = capital_over_time[-1]
 
 st.markdown(f"**📌 Resultado:** Después de **{years} años**, tu capital crecería a **${final_amount:,.2f}** con una tasa de interés del **{interest_rate_percent}% anual**.")
-

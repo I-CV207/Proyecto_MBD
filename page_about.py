@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 
-st.title("Fintruth - About")
+st.title("Fintruth PRE ALFA - About")
 st.markdown("# Conoce el proyecto")
 st.divider()
 st.markdown("## ¿Por qué es un problema?")

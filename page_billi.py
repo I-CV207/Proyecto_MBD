@@ -12,7 +12,7 @@ api_key = st.secrets["openrouter"]["api_key"]
 llm = ChatOpenAI(
     openai_api_key=api_key,
     base_url="https://openrouter.ai/api/v1",
-    model="mistralai/mistral-7b-instruct",  # or mistralai/mixtral-8x7b-instruct
+    model="mistralai/mixtral-8x7b-instruct", # mistral-7b-instruct" or mistralai/mixtral-8x7b-instruct
 )
 
 st.title("🤖 BILLIE AI, tu amigo financiero")
