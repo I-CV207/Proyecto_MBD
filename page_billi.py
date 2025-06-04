@@ -15,9 +15,9 @@ llm = ChatOpenAI(
     model="mistralai/mistral-7b-instruct",  # or mistralai/mixtral-8x7b-instruct
 )
 
-st.title("🤖 BILLI AI, tu amigo financiero")
+st.title("🤖 BILLIE AI, tu amigo financiero")
 
-user_prompt = st.text_input("Preguntale a BILLI:")
+user_prompt = st.text_input("Preguntale a BILLIE:")
 
 if user_prompt:
     response = llm([HumanMessage(content=user_prompt)])
