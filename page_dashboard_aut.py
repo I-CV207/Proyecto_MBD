@@ -365,9 +365,15 @@ if seccion == "registro":
         st.info("No hay transacciones registradas.")
     else:
         try:
+            # Intenta con el locale estándar para español en Linux
             locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
-        except:
-            locale.setlocale(locale.LC_TIME, 'Spanish_Mexico.1252')
+        except locale.Error:
+            try:
+                # Intenta con el locale de Windows (en caso de entorno local)
+                locale.setlocale(locale.LC_TIME, 'Spanish_Mexico.1252')
+            except locale.Error:
+                # Si nada funciona, sigue con el locale por defecto
+                pass
 
         mes_actual = datetime.now().strftime('%B').capitalize()
         mes_numero = datetime.now().month
@@ -427,13 +433,18 @@ if seccion == "registro":
 # ─────────────────────────────────────────────────────────────
 elif seccion == "dashboard":
     if df.empty:
-        st.warning("No hay transacciones para mostrar métricas.")
+        st.info("No hay transacciones registradas.")
     else:
-        # Configurar idioma español para el mes
         try:
-            locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')  # Linux/macOS
-        except:
-            locale.setlocale(locale.LC_TIME, 'Spanish_Mexico.1252')  # Windows
+            # Intenta con el locale estándar para español en Linux
+            locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+        except locale.Error:
+            try:
+                # Intenta con el locale de Windows (en caso de entorno local)
+                locale.setlocale(locale.LC_TIME, 'Spanish_Mexico.1252')
+            except locale.Error:
+                # Si nada funciona, sigue con el locale por defecto
+                pass
 
         # Obtener nombre del mes actual
         mes_actual = datetime.now().strftime('%B').capitalize()
