@@ -9,6 +9,7 @@ from sqlalchemy import create_engine, text
 from auth import load_authenticator
 import uuid
 from agente import crear_agente
+import traceback
 
 # ─── Estilos visuales ─────────────────────────────────────────────────────
 st.markdown("""
@@ -86,6 +87,7 @@ if "modelo_descargado" not in st.session_state:
 
     if not es_pickle_valido(modelo_path):
         st.error("❌ El archivo del modelo no es válido.")
+        st.text(traceback.format_exc())
         st.stop()
     if not es_pickle_valido(columnas_path):
         st.error("❌ El archivo de columnas no es válido.")
