@@ -12,3 +12,5 @@ langchain-core==0.3.60
 seaborn==0.13.2
 joblib
 gdown
+scikit-learn
+
