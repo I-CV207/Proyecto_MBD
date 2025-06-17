@@ -69,8 +69,8 @@ engine = create_engine("sqlite:///transacciones.db")
 # ─── Configuración del modelo ─────────────────────────────────────────────
 modelo_path = os.path.join("modelos", "modelo_perfil_ahorro.pkl")
 columnas_path = os.path.join("modelos", "columnas_modelo.pkl")
-modelo_url = "https://1drv.ms/u/c/f425a2e8ce01f812/ERfc-zj7kslCiwKD0dPe7e0BibrmaMHUWcsIK80naDaT4Q?e=HQ3Zje"
-columnas_url = "https://1drv.ms/u/c/f425a2e8ce01f812/ES7Cp1vZWppGu6mq1OkyEy8BIestUkbqS1_OiLvfm2s02Q?e=ORwQfs"
+modelo_url = "https://api.onedrive.com/v1.0/shares/u!f425a2e8ce01f812!ERfc-zj7kslCiwKD0dPe7e0BibrmaMHUWcsIK80naDaT4Q/root/content"
+columnas_url = "https://api.onedrive.com/v1.0/shares/u!f425a2e8ce01f812!ES7Cp1vZWppGu6mq1OkyEy8BIestUkbqS1_OiLvfm2s02Q/root/content"
 
 os.makedirs("modelos", exist_ok=True)
 if not os.path.exists(modelo_path):
