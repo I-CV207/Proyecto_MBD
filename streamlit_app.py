@@ -55,6 +55,7 @@ pages = {
         st.Page("page_yahoo_finance.py", title="Consulta de Acciones"),
         st.Page("page_billi.py", title="Pregúntale a BILLI"),
         st.Page("page_about.py", title="Conoce el proyecto"),
+         st.Page("test.py", title="Test"),
     ],
 }
 
