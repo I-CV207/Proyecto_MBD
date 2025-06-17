@@ -61,6 +61,7 @@ engine = create_engine("sqlite:///transacciones.db")
 # ─── Carga del modelo y columnas desde Dropbox ────────────────────────────
 modelo_url = "https://dl.dropboxusercontent.com/scl/fi/m0nhltpnmduk7q5b0ccpl/modelo_perfil_ahorro.pkl?rlkey=zs1wp7h6iacqwrfdy7ku21zr2&dl=1"
 columnas_url = "https://dl.dropboxusercontent.com/scl/fi/mzrf1nz8nrf4kgrrip382/columnas_modelo.pkl?rlkey=8gcyqgabsoaumad1m0r16mqv2&dl=1"
+
 modelo_path = os.path.join("modelos", "modelo_perfil_ahorro.pkl")
 columnas_path = os.path.join("modelos", "columnas_modelo.pkl")
 os.makedirs("modelos", exist_ok=True)
