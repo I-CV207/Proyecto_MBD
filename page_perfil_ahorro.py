@@ -61,8 +61,8 @@ engine = create_engine("sqlite:///transacciones.db")
 # ─── Descarga y carga del modelo y columnas con gdown ─────────────────────
 modelo_path = os.path.join("modelos", "modelo_perfil_ahorro.pkl")
 columnas_path = os.path.join("modelos", "columnas_modelo.pkl")
-modelo_id = "1W0jRvN64cSlbKJG8ESlOdHvAZ9up-8dL"
-columnas_id = "1uB-WGLPextKOBlXWaLREpEcJChfU9NSQ"
+modelo_id = "1FdKASu-ibDApq0An_LDTf7ivFmP7cI1j"
+columnas_id = "1j0SIcrVouK8pIxN9JT3jQzEBZKAY2eoh"
 
 os.makedirs("modelos", exist_ok=True)
 
