@@ -72,18 +72,26 @@ def registrar_transaccion_desde_texto(texto, usuario, engine):
             "renta": "Necesidades 🍎", "medico": "Necesidades 🍎", "transporte": "Necesidades 🍎", "escuela": "Necesidades 🍎",
             "gustos": "Gustos 🎁", "cine": "Gustos 🎁", "restaurante": "Gustos 🎁", "ropa": "Gustos 🎁", "viaje": "Gustos 🎁",
             "metas financieras": "Metas financieras 💰", "ahorro": "Metas financieras 💰",
-            "nomina":"Ingresos 💵", "ingreso":"Ingresos 💵", "quincena":"Ingresos 💵", "salario":"Ingresos 💵"
+            "nomina": "Ingresos 💵", "ingreso": "Ingresos 💵", "quincena": "Ingresos 💵", "salario": "Ingresos 💵"
         }
-        categoria = "Ingresos 💵"
+        categoria = None
         for k, v in categorias.items():
             if k in palabras_texto:
                 categoria = v
                 break
-        # Detectar monto
+        if not categoria:
+            categoria = "Gustos 🎁"
+
+        # Buscar descripción usando "en <palabra>"
+        descripcion = categoria
+        match_desc = re.search(r"en ([a-zA-Záéíóúñ]+)", texto_norm)
+        if match_desc:
+            descripcion = match_desc.group(1).capitalize()
+
         monto_match = re.search(r"(-?\$?\d+(?:[\.,]\d{1,2})?)", texto_norm)
         monto = float(monto_match.group().replace("$", "").replace(",", "")) if monto_match else 0.0
-        # Signo según palabra clave
-        palabras_egreso = ["gasto", "egreso", "pago", "compra", "retiro", "salida"]
+
+        palabras_egreso = ["gasto", "egreso", "pague", "pago", "compra", "retiro", "salida"]
         palabras_ingreso = ["ingreso", "abono", "deposito", "bonificacion", "reembolso", "reintegro"]
         if any(p in texto_norm for p in palabras_egreso):
             monto = -abs(monto)
@@ -92,10 +100,10 @@ def registrar_transaccion_desde_texto(texto, usuario, engine):
         categorias_negativas = ["Necesidades 🍎", "Gustos 🎁", "Metas financieras 💰"]
         if categoria in categorias_negativas and monto > 0:
             monto = -abs(monto)
-        # Cuenta
+
         cuenta_match = re.search(r"(tarjeta|banorte|bbva|hsbc|efectivo|cash|card)", texto_norm)
         cuenta = cuenta_match.group().capitalize() if cuenta_match else "General"
-        # Fecha manual
+
         fecha = datetime.now().date()
         fecha_match = re.search(r"(\d{1,2}) de ([a-zA-Z]+)", texto_norm)
         if fecha_match:
@@ -106,24 +114,52 @@ def registrar_transaccion_desde_texto(texto, usuario, engine):
                 anio = datetime.today().year
                 fecha_str = f"{anio}-{mes_num}-{dia:02d}"
                 fecha = datetime.strptime(fecha_str, "%Y-%m-%d").date()
-        # Crear nuevo registro
-        df = st.session_state.get("transacciones", pd.DataFrame())
-        next_id = int(df["ID"].max() + 1) if not df.empty else 1
-        nuevo = pd.DataFrame([{
-            "ID": next_id,
-            "Fecha": fecha.isoformat(),
-            "Descripcion": categoria,
-            "Categoria": categoria,
-            "Cuenta": cuenta,
-            "Monto": monto,
-            "Usuario": usuario
-        }])
-        st.session_state.transacciones = pd.concat([df, nuevo], ignore_index=True)
-        st.session_state.transacciones.to_sql("transacciones", engine, if_exists="append", index=False)
+
+        with engine.connect() as conn:
+            result = conn.execute(
+                text("""
+                SELECT COUNT(*) FROM transacciones
+                WHERE Usuario = :Usuario AND Fecha = :Fecha AND Categoria = :Categoria AND Monto = :Monto AND Cuenta = :Cuenta
+                """),
+                {
+                    "Usuario": usuario,
+                    "Fecha": fecha.strftime("%Y-%m-%d"),
+                    "Categoria": categoria,
+                    "Monto": monto,
+                    "Cuenta": cuenta
+                }
+            )
+            ya_existe = result.scalar() > 0
+
+        if ya_existe:
+            return "⚠️ Esta transacción ya existe y no fue registrada de nuevo."
+
+        with engine.begin() as conn:
+            result = conn.execute(text("SELECT MAX(ID) FROM transacciones"))
+            next_id = (result.scalar() or 0) + 1
+            conn.execute(
+                text("""
+                    INSERT INTO transacciones (ID, Usuario, Fecha, Descripcion, Categoria, Cuenta, Monto)
+                    VALUES (:ID, :Usuario, :Fecha, :Descripcion, :Categoria, :Cuenta, :Monto)
+                """),
+                {
+                    "ID": next_id,
+                    "Usuario": usuario,
+                    "Fecha": fecha.strftime("%Y-%m-%d"),
+                    "Descripcion": descripcion,
+                    "Categoria": categoria,
+                    "Cuenta": cuenta,
+                    "Monto": monto
+                }
+            )
+
         tipo = "ingreso" if monto >= 0 else "gasto"
-        return f"✅ Se registró un {tipo}: {categoria}, {cuenta}, ${abs(monto):,.2f} el {fecha.isoformat()}"
+        return f"✅ Se registró un {tipo}: {descripcion} ({categoria}), {cuenta}, ${abs(monto):,.2f} el {fecha.isoformat()}"
+
     except Exception as e:
         return f"❌ Error al procesar el texto: {e}"
+
+
 
 def get_gastos_por_categoria(categoria_input: str, username: str):
     df = st.session_state.get("transacciones", pd.DataFrame())
@@ -338,11 +374,13 @@ def get_total_ahorrado(engine, username):
         )
         total = result.scalar() or 0
     return f"Tu ahorro total en 'Metas financieras 💰' es de ${total:,.2f}"
+
 def get_total_asignado_metas(engine, username):
     with engine.connect() as conn:
         df_metas = pd.read_sql("SELECT * FROM metas_financieras WHERE usuario = :u", conn, params={"u": username})
     asignado = df_metas["monto_actual"].sum()
     return f"Tienes ${asignado:,.2f} asignados actualmente a tus metas."
+
 def get_ahorro_disponible(engine, username):
     with engine.connect() as conn:
         result = conn.execute(
@@ -354,6 +392,7 @@ def get_ahorro_disponible(engine, username):
     asignado = df_metas["monto_actual"].sum()
     disponible = total - asignado
     return f"Tu ahorro disponible (no asignado a ninguna meta) es de ${disponible:,.2f}"
+
 def get_resumen_metas(engine, username):
     with engine.connect() as conn:
         df = pd.read_sql("SELECT * FROM metas_financieras WHERE usuario = :u", conn, params={"u": username})
@@ -369,6 +408,7 @@ def get_resumen_metas(engine, username):
             f"({progreso:.1f}% completado, faltan ${restante:,.0f})\n"
         )
     return resumen
+
 def get_recomendacion_asignacion(engine, username):
     with engine.connect() as conn:
         df = pd.read_sql("SELECT * FROM metas_financieras WHERE usuario = :u ORDER BY plazo_meses ASC", conn, params={"u": username})
@@ -394,3 +434,67 @@ def get_recomendacion_asignacion(engine, username):
             break
 
     return mensaje
+
+def construir_presupuesto_asistido(username: str, engine):
+    """
+    Interacción asistida para sugerir presupuesto basado en ingreso y preferencias.
+    Guarda o actualiza el presupuesto en la tabla presupuestos.
+    """
+
+    st.markdown("""
+    ### Yo te ayudo a crear tu presupuesto....
+    Responde las preguntas con naturalidad. Yo me encargo de hacer los cálculos
+    """)
+
+    ingreso = st.text_input("¿Cuánto ganas al mes (aproximadamente)? Puedes escribirlo con palabras o números")
+    if ingreso:
+        try:
+            ingreso_valor = float(ingreso.replace(",", "").replace("$", ""))
+        except:
+            st.error("⛔️ No pude entender el monto que escribiste. Intenta escribirlo en números como 10000 o $10,000.")
+            return
+
+        st.markdown("""
+        ### ¿Qué parte de tu ingreso quieres destinar a:
+        (Puedes ajustar los valores o escribir sugerencias como "quiero ahorrar más", "que sea balanceado", etc.)
+        """)
+        estilo = st.radio("Estilo de reparto de presupuesto", [
+            "Clásico 50/30/20",
+            "Quiero ahorrar más",
+            "Quiero gastar más en gustos",
+            "Personalizado"
+        ])
+
+        if estilo == "Clásico 50/30/20":
+            porc_nec, porc_gus, porc_met = 50, 30, 20
+        elif estilo == "Quiero ahorrar más":
+            porc_nec, porc_gus, porc_met = 40, 25, 35
+        elif estilo == "Quiero gastar más en gustos":
+            porc_nec, porc_gus, porc_met = 40, 45, 15
+        else:
+            porc_nec = st.slider("Necesidades", 0, 100, 50)
+            porc_gus = st.slider("Gustos", 0, 100 - porc_nec, 30)
+            porc_met = 100 - (porc_nec + porc_gus)
+
+        st.info(f"Asignación propuesta:")
+        st.markdown(f"- 🍎 Necesidades: **{porc_nec}%** → ${ingreso_valor * porc_nec / 100:,.2f}")
+        st.markdown(f"- 🎁 Gustos: **{porc_gus}%** → ${ingreso_valor * porc_gus / 100:,.2f}")
+        st.markdown(f"- 💰 Metas: **{porc_met}%** → ${ingreso_valor * porc_met / 100:,.2f}")
+
+        if st.button("✅ Confirmar y guardar presupuesto"):
+            with engine.begin() as conn:
+                conn.execute(
+                    text("""
+                        INSERT OR REPLACE INTO presupuestos (Usuario, Necesidades, Gustos, MetasFinancieras)
+                        VALUES (:Usuario, :Necesidades, :Gustos, :MetasFinancieras)
+                    """),
+                    {
+                        "Usuario": username,
+                        "Necesidades": ingreso_valor * porc_nec / 100,
+                        "Gustos": ingreso_valor * porc_gus / 100,
+                        "MetasFinancieras": ingreso_valor * porc_met / 100
+                    }
+                )
+            st.success("Presupuesto guardado con éxito.")
+            st.rerun()
+
