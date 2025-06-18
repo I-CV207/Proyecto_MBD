@@ -262,18 +262,45 @@ if seccion == "registro":
                 </div>
             """, unsafe_allow_html=True)
 
-        # Mostrar por categoría
-        donut_chart(valores_actuales["Necesidades"], gastos_dict.get("Necesidades 🍎", 0.0), 
-                    categorias["Necesidades"]["color_fondo"], categorias["Necesidades"]["color_donut"], 
-                    "Necesidades", categorias["Necesidades"]["emoji"], col1)
+        # ───────────────────────────────────────
+        # SECCIÓN: Mostrar Donut charts
+        # ───────────────────────────────────────
 
-        donut_chart(valores_actuales["Gustos"], gastos_dict.get("Gustos 🎁", 0.0), 
-                    categorias["Gustos"]["color_fondo"], categorias["Gustos"]["color_donut"], 
-                    "Gustos", categorias["Gustos"]["emoji"], col2)
+     
+        def valor_valido(v):
+            return v is not None and isinstance(v, (int, float)) and not math.isnan(v) and not math.isinf(v)
 
-        donut_chart(valores_actuales["MetasFinancieras"], gastos_dict.get("Metas financieras 💰", 0.0), 
-                    categorias["MetasFinancieras"]["color_fondo"], categorias["MetasFinancieras"]["color_donut"], 
-                    "Metas financieras", categorias["MetasFinancieras"]["emoji"], col3)
+        def puede_graficar(valor_presupuesto, valor_gasto):
+            return valor_valido(valor_presupuesto) and valor_valido(valor_gasto) and (valor_presupuesto + valor_gasto > 0)
+
+        if puede_graficar(valores_actuales.get("Necesidades"), gastos_dict.get("Necesidades 🍎", 0.0)):
+            donut_chart(
+                valores_actuales["Necesidades"], gastos_dict.get("Necesidades 🍎", 0.0),
+                categorias["Necesidades"]["color_fondo"], categorias["Necesidades"]["color_donut"],
+                "Necesidades", categorias["Necesidades"]["emoji"], col1
+            )
+        else:
+            col1.warning("🛠️ Arma tu presupuesto para ver tus necesidades.")
+
+        if puede_graficar(valores_actuales.get("Gustos"), gastos_dict.get("Gustos 🎁", 0.0)):
+            donut_chart(
+                valores_actuales["Gustos"], gastos_dict.get("Gustos 🎁", 0.0),
+                categorias["Gustos"]["color_fondo"], categorias["Gustos"]["color_donut"],
+                "Gustos", categorias["Gustos"]["emoji"], col2
+            )
+        else:
+            col2.warning("🛠️ Arma tu presupuesto para ver tus gustos.")
+
+        if puede_graficar(valores_actuales.get("MetasFinancieras"), gastos_dict.get("Metas financieras 💰", 0.0)):
+            donut_chart(
+                valores_actuales["MetasFinancieras"], gastos_dict.get("Metas financieras 💰", 0.0),
+                categorias["MetasFinancieras"]["color_fondo"], categorias["MetasFinancieras"]["color_donut"],
+                "Metas financieras", categorias["MetasFinancieras"]["emoji"], col3
+            )
+        else:
+            col3.warning("🛠️ Arma tu presupuesto para ver tus metas.")
+
+
          # ───────────────────────────────────────
         # Observaciones
         # ───────────────────────────────────────       
