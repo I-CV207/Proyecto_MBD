@@ -521,7 +521,10 @@ if seccion == "registro":
 # ─────────────────────────────────────────────────────────────
 elif seccion == "dashboard":
     if df.empty:
-        st.info("No hay transacciones registradas.")
+        st.info("No hay transacciones registradas. Empie")
+        if st.button("🛠️ Armar presupuesto ahora"):
+            st.session_state.seccio = "registro"
+            st.rerun()
     else:
         try:
             # Intenta con el locale estándar para español en Linux
