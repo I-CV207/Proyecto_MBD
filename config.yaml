@@ -6,6 +6,9 @@ credentials:
     usuario2:
       name: Ana Gomez
       password: $2b$12$tszQ30YFncKPqJL5TRWqM.V0RON.TOTKzptr6bnsQiaKPBZENfEFy  # hola456
+    usuario3:
+      name: Denisse
+      password: $2b$12$X5C7M5/8S9AxvN6ZE7v3ieJez0GdGrbC3BzhAbB0urCGpihhPDt4C  # test123
 
 cookie:
   name: session_cookie
