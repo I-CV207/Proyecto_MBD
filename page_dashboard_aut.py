@@ -523,7 +523,7 @@ elif seccion == "dashboard":
     if df.empty:
         st.info("No hay transacciones registradas. Empie")
         if st.button("🛠️ Armar presupuesto ahora"):
-            st.session_state.seccio = "registro"
+            st.session_state.seccion = "registro"
             st.rerun()
     else:
         try:
