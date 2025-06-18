@@ -6,7 +6,7 @@ from utils import (
     get_promedio_gastos, proyeccion_saldo_fin_mes, ranking_gastos_categorias, ranking_ingresos_categorias,
     porcentaje_gastos_por_categoria, alerta_gasto_excesivo, sugerencia_ahorro, buscar_transacciones,
     evolucion_balance, comparativa_gastos_mensual, gastos_recurrentes, sugerencia_presupuesto, simulador_sin_gasto_en,get_total_ahorrado, get_total_asignado_metas, get_ahorro_disponible,
-    get_resumen_metas, get_recomendacion_asignacion
+    get_resumen_metas, get_recomendacion_asignacion,construir_presupuesto_asistido
 )
 import streamlit as st
 
@@ -15,6 +15,9 @@ def crear_agente(username,engine):
         openai_api_key=st.secrets["openrouter"]["api_key"],
         base_url="https://openrouter.ai/api/v1",
         model="mistralai/mixtral-8x7b-instruct",
+        #openai_api_key=st.secrets["openai"]["api_key"],
+        #model="gpt-4",
+
     )
 
     tools = [
@@ -138,6 +141,10 @@ def crear_agente(username,engine):
         Tool(name="Recomendación de asignación", 
             func=lambda x: get_recomendacion_asignacion(engine, username), 
             description="Sugiere cómo distribuir el ahorro disponible entre las metas."
+        ),
+        Tool(name="Asistente de presupuesto",
+        func=construir_presupuesto_asistido,
+        description="Guía al usuario para construir su presupuesto mensual basado en su ingreso y estilo de vida."
         ),
     ]
 

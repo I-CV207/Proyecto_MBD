@@ -10,7 +10,7 @@ from utils import (
     get_promedio_gastos, proyeccion_saldo_fin_mes, ranking_gastos_categorias, ranking_ingresos_categorias,
     porcentaje_gastos_por_categoria, alerta_gasto_excesivo, sugerencia_ahorro, buscar_transacciones,
     evolucion_balance, comparativa_gastos_mensual, gastos_recurrentes, sugerencia_presupuesto, simulador_sin_gasto_en,
-    get_total_ahorrado, get_total_asignado_metas, get_ahorro_disponible,get_resumen_metas, get_recomendacion_asignacion
+    get_total_ahorrado, get_total_asignado_metas, get_ahorro_disponible,get_resumen_metas, get_recomendacion_asignacion,construir_presupuesto_asistido
 )
 from agente import crear_agente
 from datetime import datetime
@@ -109,11 +109,37 @@ if seccion == "registro":
         stmt = text("SELECT * FROM presupuestos WHERE Usuario = :username")
         result = conn.execute(stmt, {"username": username})
         presupuesto_existente = result.fetchone()
+    # ────────────────────────────────
+    # Sección: Aistente presupuesto
+    # ────────────────────────────────    
+    
+    agent = crear_agente(username, engine)
 
+    # Botón para activar asistente de presupuesto
+    if "mostrar_asistente_presupuesto" not in st.session_state:
+        st.session_state.mostrar_asistente_presupuesto = False
+
+    if not st.session_state.mostrar_asistente_presupuesto:
+        if st.button(f"Billie: Hola, {name}, armemos o modifiquemos tu presupuesto ¿Quieres que te ayude?"):
+            st.session_state.mostrar_asistente_presupuesto = True
+            st.rerun()
+
+    if st.session_state.mostrar_asistente_presupuesto:
+        with st.expander(f"Billie: {name} deja que te ayude a construir tu presupuesto, empecemos......", expanded=True):
+            construir_presupuesto_asistido(username, engine)
+
+    # Verificar si el usuario ya tiene un presupuesto
+    with engine.connect() as conn:
+        stmt = text("SELECT * FROM presupuestos WHERE Usuario = :username")
+        result = conn.execute(stmt, {"username": username})
+        presupuesto_existente = result.fetchone()
+
+ 
+        
         # ───────────────────────────────────────
         # SECCIÓN: Añadir o editar presupuesto
         # ───────────────────────────────────────
-        with st.expander("Ver o modificar presupuesto"):
+        with st.expander("Ver o modificar presupuesto manualmente"):
             with st.form("form_presupuesto"):
                 # Leer presupuesto actual del usuario
                 with engine.connect() as conn:
@@ -203,7 +229,7 @@ if seccion == "registro":
         gastos_dict = df_gastos.set_index("Categoria")["Gasto"].to_dict()
 
         # Mostrar los gráficos
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns([1, 1, 1, 1])  # Agrega una 4ta columna para Billie
 
         def donut_chart(presupuesto, gasto, color_fondo, color_donut, categoria, emoji, col):
             # Validar y corregir NaN
@@ -248,6 +274,41 @@ if seccion == "registro":
         donut_chart(valores_actuales["MetasFinancieras"], gastos_dict.get("Metas financieras 💰", 0.0), 
                     categorias["MetasFinancieras"]["color_fondo"], categorias["MetasFinancieras"]["color_donut"], 
                     "Metas financieras", categorias["MetasFinancieras"]["emoji"], col3)
+         # ───────────────────────────────────────
+        # Observaciones
+        # ───────────────────────────────────────       
+        with col4:
+            st.markdown("""
+            <div style='background-color: #f4f4f4; padding: 20px; border-radius: 10px; color: #333;'>
+                <h5> Billie te dice:</h5>
+            """, unsafe_allow_html=True)
+            st.markdown("")
+
+            prompt_analisis = f"""
+            Eres un asesor financiero. Analiza estos datos del mes:
+            - Necesidades: gasto ${gastos_dict.get("Necesidades 🍎", 0.0):,.2f} de ${valores_actuales['Necesidades']:,.2f} presupuestados
+            - Gustos: gasto ${gastos_dict.get("Gustos 🎁", 0.0):,.2f} de ${valores_actuales['Gustos']:,.2f} presupuestados
+            - Metas: gasto ${gastos_dict.get("Metas financieras 💰", 0.0):,.2f} de ${valores_actuales['MetasFinancieras']:,.2f} presupuestados
+
+            Redacta un resumen amable y en lenguaje cotidiano que conteste:
+            - ¿Va bien?
+            - ¿En qué puede mejorar?
+            - ¿Recomendaciones de acción simples?
+            - Si no hay registros, invítalo a comenzar.
+            """
+
+            try:
+                respuesta_billie = agent.run(prompt_analisis)
+            except Exception as e:
+                respuesta_billie = "Billie no pudo hacer el análisis."
+
+            st.markdown(f"""
+                <div style='font-size: 14px; line-height: 1.6;'>
+                {respuesta_billie}
+                </div>
+                </div>
+            """, unsafe_allow_html=True)
+
         # ───────────────────────────────────────
         # Mostrar tabla de transacciones en formato desplazable
         # ───────────────────────────────────────
@@ -282,7 +343,7 @@ if seccion == "registro":
                 st.dataframe(df_mes[['ID','Fecha','Descripcion','Categoria','Cuenta','Monto']], use_container_width=True, height=250)
                 st.markdown('</div>', unsafe_allow_html=True)
         # Agente
-        agent = crear_agente(username, engine)
+        #agent = crear_agente(username, engine)
 
         # ────────────────
         # ESTILO PERSONALIZADO
