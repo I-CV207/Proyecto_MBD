@@ -441,11 +441,6 @@ def construir_presupuesto_asistido(username: str, engine):
     Guarda o actualiza el presupuesto en la tabla presupuestos.
     """
 
-    st.markdown("""
-    ### Yo te ayudo a crear tu presupuesto....
-    Responde las preguntas con naturalidad. Yo me encargo de hacer los cálculos
-    """)
-
     ingreso = st.text_input("¿Cuánto ganas al mes (aproximadamente)? Puedes escribirlo con palabras o números")
     if ingreso:
         try:
@@ -497,4 +492,59 @@ def construir_presupuesto_asistido(username: str, engine):
                 )
             st.success("Presupuesto guardado con éxito.")
             st.rerun()
+#________________________________
+#**Funciones de perfil de ahorro
+#________________________________
+def obtener_perfil_ahorro(engine, username):
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("SELECT perfil_ahorro, perfil_riesgo FROM perfiles_ahorro WHERE usuario = :u"),
+            {"u": username}
+        ).mappings().first()
+
+    if result:
+        return result["perfil_ahorro"], result["perfil_riesgo"]
+    else:
+        return None, None
+
+def cargar_fondos_desde_db(engine):#Fondos de inversion
+    with engine.connect() as conn:
+        df = pd.read_sql("SELECT * FROM fondos_inversion", conn)
+    return df
+
+def construir_prompt_recomendaciones_fondos(df_resumen_fondos, perfil_usuario):
+    filas = []
+    for _, row in df_resumen_fondos.iterrows():
+        linea = (
+            f"- {row['Nombre coloquial']} → {row['perfil_recomendado']} "
+            f"(rendimiento promedio: {row['vl_promedio']:.2f}, volatilidad: {row['vl_std']:.2f})"
+        )
+        filas.append(linea)
+
+    listado_fondos = "\n".join(filas)
+
+    prompt = f"""
+Eres un asesor financiero. El usuario tiene un perfil de riesgo **{perfil_usuario}**.
+
+Aquí tienes fondos de inversión disponibles en México, clasificados por perfil, con su rendimiento histórico y volatilidad:
+
+{listado_fondos}
+
+Responde en lenguaje claro y práctico, sin tecnicismos. Tu respuesta debe contener:
+
+1. Una introducción breve.
+2. 3 fondos recomendados alineados con el perfil del usuario, explicando por qué.
+3. Al menos 1 instrumento adicional de renta fija y 1 de renta variable con base al perfil.
+4. En cada recomendación, si conoces un sitio web público o confiable (como el de la operadora, Morningstar, la CNBV o el documento informativo del fondo), agrega un **enlace directo** al final.
+5. Si no tienes un enlace exacto, sugiere dónde podría buscar información confiable (ej. "busca en el sitio de GBM" o "consulta Morningstar México").
+"""
+
+    return prompt
+
+def simular_inversion(monto_inicial: float, tasa_anual: float, años: int):
+    return monto_inicial * (1 + tasa_anual) ** años
+
+def calcular_evolucion_anual(monto_inicial, tasa_anual, años):
+    return [round(monto_inicial * (1 + tasa_anual) ** a, 2) for a in range(años + 1)]
+
 

@@ -8,13 +8,19 @@ from langchain.schema import HumanMessage
 from sqlalchemy import create_engine, text
 from auth import load_authenticator
 import uuid
-from agente import crear_agente
+from utils import (
+    cargar_fondos_desde_db, construir_prompt_recomendaciones_fondos, simular_inversion,
+    calcular_evolucion_anual, obtener_perfil_ahorro
+)
+from agente_inversion import crear_agente_inversion
+import matplotlib.pyplot as plt
+
 
 # ─── Estilos visuales ─────────────────────────────────────────────────────
 st.markdown("""
     <style>
         .stExpander {
-            background-color: #f4f9f4;
+            background-color: #ffffff;
             border: 2px solid #56A163;
             border-radius: 10px;
             padding: 10px;
@@ -24,15 +30,15 @@ st.markdown("""
             font-weight: 500;
         }
         .stButton > button {
-            background-color: #56A163;
-            color: white;
+            background-color: #white;
+            color: black;
             font-weight: bold;
             border-radius: 10px;
             padding: 0.5em 1em;
         }
         .stButton > button:hover {
-            background-color: #3c774d;
-            color: #ffffff;
+            background-color: #ffffff;
+            color: black;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -52,7 +58,7 @@ elif authentication_status is None:
     st.warning("🔐 Por favor inicia sesión.")
     st.stop()
 
-st.sidebar.success(f"Bienvenido, {name}")
+st.sidebar.success(f"Hola, {name}")
 authenticator.logout("Cerrar sesión", "sidebar")
 
 # ─── Conexión a la base de datos ──────────────────────────────────────────
@@ -119,10 +125,10 @@ if "modelo_descargado" not in st.session_state:
     if os.path.exists(columnas_path):
         os.remove(columnas_path)
 
-    st.info("⬇️ Descargando modelo desde GitHub...")
+    st.info("Generando modelo de perfilamiento...")
     descargar_desde_github(modelo_url, modelo_path)
 
-    st.info("⬇️ Descargando columnas desde GitHub...")
+    st.info("Espera un poco mas...")
     descargar_desde_github(columnas_url, columnas_path)
 
     st.session_state.modelo_descargado = True
@@ -130,9 +136,32 @@ if "modelo_descargado" not in st.session_state:
 # ─── Cargar ─────────────────────────────────────────────
 model = validar_y_cargar_modelo(modelo_path)
 columnas_modelo = validar_y_cargar_columnas(columnas_path)
+# ───────────────────────────────────────
+# Mensaje de bienvenida si usuario tiene o no perfil
+# ───────────────────────────────────────
 
+with engine.connect() as conn:
+    perfil = conn.execute(
+        text("SELECT * FROM perfiles_ahorro WHERE usuario = :u"),
+        {"u": username}
+    ).fetchone()
 
+st.markdown(f"<h3 style='text-align: center;'>Hola, {name}</h3>", unsafe_allow_html=True)
 
+if perfil:
+    st.markdown("""
+        <div style='display: flex; justify-content: center; margin-top: 30px;'>
+            <div style='background-color: #009473; color: #ffffff ; border: 1px solid #c3e6cb;
+                        padding: 20px 40px; border-radius: 10px; text-align: center; max-width: 500px;'>
+                <h4>Actualmente tu perfil es:</h4>
+                <p style='font-size: 22px; font-weight: bold;'>{} {}</p>
+            </div>
+        </div>
+    """.format(perfil[1], perfil[2]), unsafe_allow_html=True)
+else:
+    st.warning("⚠️ Aún no has definido tu perfil de ahorro. Por favor responde el cuestionario para obtener recomendaciones personalizadas.")
+
+st.markdown("")
 
 # ─── Revisar perfil previo ────────────────────────────────────────────────
 if "modificar_perfil" not in st.session_state:
@@ -141,7 +170,7 @@ if "modificar_perfil" not in st.session_state:
         if result:
             st.session_state.perfil = result[1]
             st.session_state.perfil_riesgo = result[2]
-            st.info(f"📝 Ya tienes un perfil guardado como **{result[1]} {result[2]}**.")
+            st.info(f"Actualemente tu perfil es: **{result[1]} {result[2]}**.")
         st.session_state.modificar_perfil = False
 
 # ─── Formulario expandible ────────────────────────────────────────────────
@@ -209,9 +238,9 @@ with st.expander("Descrubre o modifica tu perfil financiero", expanded=st.sessio
         if inversion == "Espero un par de meses y si no mejora, lo retiro":
             return "Moderado" if comodidad != "Nada cómodo/a, prefiero algo seguro" else "Conservador"
         if inversion == "Me tranquilizo, lo dejo minimo un año":
-            return "Audaz" if comodidad in ["Relajado/a, sé que es normal en inversiones", "Me gusta la emoción, ¡es parte del juego!"] else "Moderado"
+            return "Arriesgado" if comodidad in ["Relajado/a, sé que es normal en inversiones", "Me gusta la emoción, ¡es parte del juego!"] else "Moderado"
         if inversion == "Compro más acciones, es una buena oportunidad de compra":
-            return "Agresivo" if comodidad in ["Relajado/a, sé que es normal en inversiones", "Me gusta la emoción, ¡es parte del juego!"] else "Audaz"
+            return "Arriesgado" if comodidad in ["Relajado/a, sé que es normal en inversiones", "Me gusta la emoción, ¡es parte del juego!"] else "Audaz"
         return "Sin clasificar"
 
     if st.button("✅ Guardar y clasificar perfil"):
@@ -264,5 +293,91 @@ with st.expander("Descrubre o modifica tu perfil financiero", expanded=st.sessio
                 "inversion": inversion, "comodidad": comodidad
             })
 
-        st.success(f"🎯 Tu perfil fue clasificado como: **{perfil} {perfil_riesgo}** y guardado exitosamente.")
+        st.success(f"¡Gracias {name}! He analizado tus respuestas, y,dentro del ecosistema de Bill.iA actualmente tu perfil es: **{perfil} {perfil_riesgo}**")
         st.session_state.modificar_perfil = False
+#_____________________________________
+#Seccion de recomendacion de agente
+#____________________________________
+# ─── Sección: Recomendaciones y simulación ───────────────────────────────
+st.subheader("Descubre cómo tu ahorro podría evolucionar...")
+
+# Obtener perfil del usuario
+perfil_ahorro, perfil_riesgo = obtener_perfil_ahorro(engine, username)
+
+if not perfil_riesgo:
+    st.warning("⚠️ Aún no tienes un perfil registrado. Completa el formulario primero.")
+else:
+    # Estilo personalizado del slider
+    st.markdown("""
+    <style>
+    /* Fuerza un filtro de color para modificar el aspecto general */
+    div[data-baseweb="slider"] {
+        filter: hue-rotate(90deg);  /* Ajusta el matiz: 90 = verde, 270 = azul */
+    }
+
+    /* Opcional: mejorar el contraste del thumb */
+    div[data-baseweb="slider"] [role="slider"] {
+        box-shadow: 0 0 0 3px #56A16350;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Cargar fondos y construir prompt
+    df_fondos = cargar_fondos_desde_db(engine)
+    prompt = construir_prompt_recomendaciones_fondos(df_fondos, perfil_riesgo)
+    agente = crear_agente_inversion(username, engine)
+
+    # Estado de simulación
+    if "mostrar_recomendaciones" not in st.session_state:
+        st.session_state.mostrar_recomendaciones = False
+
+    if st.button("Recomiendame donde invertir"):
+        st.session_state.mostrar_recomendaciones = True
+        st.session_state.respuesta_agente = agente.run(prompt)
+
+    if st.session_state.mostrar_recomendaciones:
+
+        # Mostrar recomendaciones del agente
+        st.info(st.session_state.respuesta_agente)
+
+        # Recuperar ahorro actual
+        with engine.connect() as conn:
+            result = conn.execute(
+                text("""SELECT ABS(SUM(Monto)) FROM transacciones 
+                        WHERE Usuario = :u AND Categoria = 'Metas financieras 💰'"""),
+                {"u": username}
+            )
+            ahorro_actual = result.scalar() or 10000
+
+        # Entradas personalizadas
+        monto_inicial = st.number_input("Monto a invertir (puedes ajustarlo)", value=ahorro_actual, step=500.0)
+        años = st.slider("Años a simular", 1, 20, 10)
+
+        # Simulación
+        st.subheader(f"Si hoy invirtieras ${abs(int(monto_inicial))} en {años} años ganarías aproximadamente:")
+        df_fondos_riesgo = df_fondos[df_fondos["perfil_recomendado"].str.lower() == perfil_riesgo.lower()]
+
+        if df_fondos_riesgo.empty:
+            st.warning("No se encontraron fondos compatibles con tu perfil.")
+        else:
+            col1, col2 = st.columns(2)
+            for i, (_, fondo) in enumerate(df_fondos_riesgo.iterrows()):
+                rendimiento = fondo["vl_promedio"] / 100
+                resultado = simular_inversion(monto_inicial, rendimiento, años)
+
+                bloque_html = f"""
+                <div style="background-color: #f0f9f4; border-left: 5px solid #009473;
+                            padding: 15px; margin-bottom: 15px; border-radius: 8px;">
+                    <h5 style="margin:0;">💼 {fondo['Nombre coloquial']} - {fondo['Portafolio']}</h5>
+                    <p style="margin:0;">Rendimiento anual estimado: <strong>{fondo['vl_promedio']:.2f}%</strong></p>
+                    <p style="margin:0;">Monto proyectado en {años} años: 
+                        <strong>${resultado:,.2f}</strong></p>
+                </div>
+                """
+                (col1 if i % 2 == 0 else col2).markdown(bloque_html, unsafe_allow_html=True)
+
+        # Botón para ocultar resultados
+        if st.button("Ocultar simulación"):
+            st.session_state.mostrar_recomendaciones = False
+            st.rerun()
+
