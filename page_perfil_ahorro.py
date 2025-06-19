@@ -336,6 +336,11 @@ else:
         st.session_state.respuesta_agente = agente.run(prompt)
 
     if st.session_state.mostrar_recomendaciones:
+    if "respuesta_agente" in st.session_state:
+        st.info(st.session_state.respuesta_agente)
+    else:
+        st.warning("⚠️ No se encontró la respuesta del agente. Haz clic nuevamente en el botón.")
+
 
         # Mostrar recomendaciones del agente
         st.info(st.session_state.respuesta_agente)
