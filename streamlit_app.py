@@ -47,15 +47,15 @@ st.markdown("""
 
 # Definición de páginas
 pages = {
-    "Dashboard": [
+    "Bill.ai": [
         st.Page("page_dashboard_aut.py", title="Tu dinero"),
         st.Page("page_perfil_ahorro.py", title="Evoluciona"),
         st.Page("page_aprende.py", title="Aprende"),
-        st.Page("page_simulador.py", title="Simula tu ahorro"),
-        st.Page("page_yahoo_finance.py", title="Consulta de Acciones"),
-        st.Page("page_billi.py", title="Pregúntale a BILLI"),
-        st.Page("page_about.py", title="Conoce el proyecto"),
-         st.Page("test.py", title="Test"),
+        #st.Page("page_simulador.py", title="Simula tu ahorro"),
+        #st.Page("page_yahoo_finance.py", title="Consulta de Acciones"),
+        #st.Page("page_billi.py", title="Pregúntale a BILLI"),
+        #st.Page("page_about.py", title="Conoce el proyecto"),
+        #st.Page("test.py", title="Test"),
     ],
 }
 
