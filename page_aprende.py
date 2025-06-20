@@ -71,8 +71,6 @@ if "tags_seleccionados" not in st.session_state:
     st.session_state.tags_seleccionados = set()
 
 # ─── Mostrar chips horizontalmente con estilo ──────────────
-st.markdown("### Temáticas disponibles:")
-
 # Estilo visual
 st.markdown("""
 <style>
