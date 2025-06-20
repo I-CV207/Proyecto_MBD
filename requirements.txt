@@ -13,4 +13,4 @@ seaborn==0.13.2
 joblib
 gdown
 scikit-learn
-
+openpyxl
