@@ -49,7 +49,7 @@ st.markdown("""
 pages = {
     "Bill.ai": [
         st.Page("page_dashboard_aut.py", title="Tu dinero"),
-        st.Page("page_perfil_ahorro_v2.py", title="Evoluciona"),
+        st.Page("page_perfil_ahorro_V2.py", title="Evoluciona"),
         st.Page("page_aprende.py", title="Aprende"),
         #st.Page("page_simulador.py", title="Simula tu ahorro"),
         #st.Page("page_yahoo_finance.py", title="Consulta de Acciones"),
