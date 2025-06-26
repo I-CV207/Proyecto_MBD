@@ -5,6 +5,9 @@ from datetime import datetime
 import unicodedata
 from sqlalchemy import text
 from calendar import monthrange
+import yfinance as yf
+from prophet import Prophet
+import numpy as np
 
 def cargar_transacciones_usuario(engine, username):
     try:
@@ -509,9 +512,11 @@ def obtener_perfil_ahorro(engine, username):
 
 def cargar_fondos_desde_db(engine):#Fondos de inversion
     with engine.connect() as conn:
-        df = pd.read_sql("SELECT * FROM fondos_inversion", conn)
+        #df = pd.read_sql("SELECT * FROM fondos_inversion", conn)
+        df = pd.read_sql("SELECT * FROM fondos_inversion_v2", conn)
     return df
 
+'''
 def construir_prompt_recomendaciones_fondos(df_resumen_fondos, perfil_usuario):
     filas = []
     for _, row in df_resumen_fondos.iterrows():
@@ -540,11 +545,72 @@ Responde en lenguaje claro y práctico, sin tecnicismos. Tu respuesta debe conte
 """
 
     return prompt
+'''
+def construir_prompt_recomendaciones_fondos(df_fondos, perfil_usuario):
+    df_fondos.columns = [col.strip().replace(" ", "_").lower() for col in df_fondos.columns]
+
+    fondos_filtrados = df_fondos[df_fondos["riesgo"].str.lower() == perfil_usuario.lower()]
+
+    if fondos_filtrados.empty:
+        return f"No se encontraron fondos para el perfil de riesgo '{perfil_usuario}'."
+
+    resumen = "\n".join(
+        f"- {row['fondo']} ({row['administradora_del_fondo']}): {row['horizonte']}, "
+        f"Liquidez: {row['liquidez']}, Calificación: {row['calificación']}, Ticker: {row['ticker']}"
+        for _, row in fondos_filtrados.iterrows()
+    )
+    prompt = f"""
+Eres un asesor financiero y el usuario tiene un perfil de riesgo **{perfil_usuario}**.
+
+Estos son algunos fondos compatibles con su perfil:
+
+{resumen}
+Responde en lenguaje claro y práctico en forma de lista, sin tecnicismos. Tu respuesta debe contener:
+
+1. Una introducción breve.
+2. Elige 4 fondos para recomendar, y explica por qué, con base en su horizonte, calificación y liquidez.
+3. Al menos 1 instrumento adicional de renta fija y 1 de renta variable con base al perfil.
+4. En cada recomendación, si conoces un sitio web público o confiable (como el de la operadora, Morningstar, la CNBV o el documento informativo del fondo), agrega un **enlace directo** al final.
+5. Si no tienes un enlace exacto, sugiere dónde podría buscar información confiable (ej. "busca en el sitio de GBM" o "consulta Morningstar México").
+
+
+"""
+    return prompt
 
 def simular_inversion(monto_inicial: float, tasa_anual: float, años: int):
     return monto_inicial * (1 + tasa_anual) ** años
 
 def calcular_evolucion_anual(monto_inicial, tasa_anual, años):
     return [round(monto_inicial * (1 + tasa_anual) ** a, 2) for a in range(años + 1)]
+
+
+
+def forecast_yf_ticker(ticker: str, monto_inicial: float, años: int):
+    try:
+        #df = yf.Ticker(ticker, period="max", interval="1d", progress=False)[["Close"]].dropna()
+        fondo = yf.Ticker(ticker)
+        hist = fondo.history(period="max")
+        df = hist[["Close"]].reset_index()
+        df = df.reset_index().rename(columns={"Date": "ds", "Close": "y"})
+        df["ds"]=df["ds"].dt.tz_localize(None)
+        df = df[df["y"] > 0]
+
+        model = Prophet(daily_seasonality=True)
+        model.fit(df)
+
+        future = model.make_future_dataframe(periods=años * 365)
+        forecast = model.predict(future)
+
+        df_merge = forecast[["ds", "yhat"]].tail(1)
+        final_price = df_merge["yhat"].values[0]
+        initial_price = df["y"].iloc[-1]
+
+        crecimiento = final_price / initial_price
+        monto_final = monto_inicial * crecimiento
+        cagr = (crecimiento) ** (1 / años) - 1
+
+        return monto_final, cagr, model, df, forecast
+    except Exception as e:
+        return None, None, None, None, None
 
 
