@@ -174,6 +174,14 @@ if "modificar_perfil" not in st.session_state:
         st.session_state.modificar_perfil = False
 
 # ─── Formulario expandible ────────────────────────────────────────────────
+with engine.connect() as conn:
+            result = conn.execute(
+                text("""SELECT ABS(SUM(Monto)) FROM transacciones 
+                        WHERE Usuario = :u AND Categoria = 'Metas financieras 💰'"""),
+                {"u": username}
+            )
+            ahorro_actual = result.scalar() or 10000
+
 with st.expander("Descrubre o modifica tu perfil financiero", expanded=st.session_state.get("modificar_perfil", False)):
     edad = st.slider("Edad", 18, 99, 30)
     sexo = st.selectbox("Sexo", ["Hombre", "Mujer"])
@@ -205,7 +213,7 @@ with st.expander("Descrubre o modifica tu perfil financiero", expanded=st.sessio
     seguro = st.radio("¿Tienes algún seguro?", ["Si", "No"])
     afore = st.radio("¿Tienes AFORE?", ["Si", "No"])
     tarjeta = st.radio("¿Tienes tarjeta de crédito bancaria o departamental?", ["Si", "No"])
-    inversion = st.selectbox("Si inviertes 10,000 y al siguiente mes disminuye a 8,500, ¿Qué harías?", [
+    inversion = st.selectbox(f"Si inviertes {int(ahorro_actual)} y al siguiente mes disminuye a {int(ahorro_actual*.85)} ¿Qué harías?", [
         "Lo retiro de inmediato", "Espero un par de meses y si no mejora, lo retiro",
         "Me tranquilizo, lo dejo minimo un año", "Compro más acciones, es una buena oportunidad de compra"])
     comodidad = st.selectbox("¿Qué tan cómodo/cómoda te sientes con que tu inversión suba y baje día con día si a largo plazo podrías ganar más?", [
