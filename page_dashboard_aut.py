@@ -42,7 +42,7 @@ elif authentication_status is None:
     st.warning("🔐 Por favor inicia sesión.")
     st.stop()
 
-st.sidebar.success(f"Bienvenido, {name}")
+st.sidebar.success(f"Hola, {name}")
 authenticator.logout("Cerrar sesión", "sidebar")
 
 # Conexión a la base SQLite
@@ -78,6 +78,10 @@ st.markdown("""
         color: #6495ED !important;
         font-weight: bold;
     }
+   .stButton > button:hover {
+        background-color: #ffffff;
+        color: #ffffff;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -305,36 +309,46 @@ if seccion == "registro":
         # Observaciones
         # ───────────────────────────────────────       
         with col4:
-            st.markdown("""
-            <div style='background-color: #f4f4f4; padding: 20px; border-radius: 10px; color: #333;'>
-                <h5> Billie te dice:</h5>
-            """, unsafe_allow_html=True)
-            st.markdown("")
-
-            prompt_analisis = f"""
-            Eres un asesor financiero. Analiza estos datos del mes:
-            - Necesidades: gasto ${gastos_dict.get("Necesidades 🍎", 0.0):,.2f} de ${valores_actuales['Necesidades']:,.2f} presupuestados
-            - Gustos: gasto ${gastos_dict.get("Gustos 🎁", 0.0):,.2f} de ${valores_actuales['Gustos']:,.2f} presupuestados
-            - Metas: gasto ${gastos_dict.get("Metas financieras 💰", 0.0):,.2f} de ${valores_actuales['MetasFinancieras']:,.2f} presupuestados
-
-            Redacta un resumen amable y en lenguaje cotidiano que conteste:
-            - ¿Va bien?
-            - ¿En qué puede mejorar?
-            - ¿Recomendaciones de acción simples?
-            - Si no hay registros, invítalo a comenzar.
-            """
-
-            try:
-                respuesta_billie = agent.run(prompt_analisis)
-            except Exception as e:
-                respuesta_billie = "Billie no pudo hacer el análisis."
-
             st.markdown(f"""
-                <div style='font-size: 14px; line-height: 1.6;'>
-                {respuesta_billie}
-                </div>
-                </div>
+            <div style='background-color: #f4f4f4; padding: 20px; border-radius: 10px; text-align: center;'>
+                <h10 style='color: #333;'>¿Quieres saber cómo vas este mes {name}?</h10>
             """, unsafe_allow_html=True)
+
+            # Centrar el botón usando columnas invisibles
+            col_b1, col_b2, col_b3 = st.columns([2, 2, 1])
+            with col_b2:
+                activar_analisis = st.button("Analizar")
+
+            st.markdown("</div>", unsafe_allow_html=True)  # Cierre del recuadro gris
+
+            if activar_analisis:
+                
+                prompt_analisis = f"""
+                Eres un asesor financiero. Analiza estos datos del mes:
+                - Necesidades: gasto ${gastos_dict.get("Necesidades 🍎", 0.0):,.2f} de ${valores_actuales['Necesidades']:,.2f} presupuestados
+                - Gustos: gasto ${gastos_dict.get("Gustos 🎁", 0.0):,.2f} de ${valores_actuales['Gustos']:,.2f} presupuestados
+                - Metas: gasto ${gastos_dict.get("Metas financieras 💰", 0.0):,.2f} de ${valores_actuales['MetasFinancieras']:,.2f} presupuestados
+
+                Redacta un resumen amable y en lenguaje cotidiano que conteste:
+                - ¿Va bien?
+                - ¿En qué puede mejorar?
+                - ¿Recomendaciones de acción simples?
+                - Si no hay registros, invítalo a comenzar.
+                """
+
+                try:
+                    respuesta_billie = agent.run(prompt_analisis)
+                except Exception as e:
+                    respuesta_billie = "Billie no pudo hacer el análisis."
+
+                st.markdown(f"""
+                    <div style='font-size: 14px; line-height: 1.6;'>
+                    {respuesta_billie}
+                    </div>
+                    </div>
+                """, unsafe_allow_html=True)
+
+
 
         # ───────────────────────────────────────
         # Mostrar tabla de transacciones en formato desplazable
