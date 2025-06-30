@@ -1,61 +1,91 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import os
+from PIL import Image
+import base64
+from io import BytesIO
 
-st.set_page_config(page_title="Custom Styled App", layout="wide")
+
+st.set_page_config(page_title="Billie App", layout="wide")
 
 # Inject custom CSS
-st.markdown("""
+st.markdown(f"""
     <style>
-    /* Fondo general de la app */
-    .stApp {
-        background-color: #ffffff;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-    /* Sidebar general */
-    section[data-testid="stSidebar"] {
+    html, body, [class*="css"] {{
+        font-family: 'Poppins', sans-serif !important;
+        background-color: white;
+    }}
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {{
         background-color: #E4E2E2;
-    }
-
-    /* Texto general del sidebar */
-    section[data-testid="stSidebar"] * {
+    }}
+    section[data-testid="stSidebar"] * {{
         color: #000000 !important;
         font-size: 20px !important;
-        font-family: 'Montserrat', sans-serif !important;
-    }
-
-    /* Selector de página activo */
+    }}
     section[data-testid="stSidebar"] div[aria-current="page"],
-    section[data-testid="stSidebar"] a[aria-current="page"] {
-        background-color: #009473 !important;  /* Verde activo */
+    section[data-testid="stSidebar"] a[aria-current="page"] {{
+        background-color: #009473 !important;
         color: white !important;
         border-radius: 10px;
         font-weight: bold;
         padding: 8px 16px;
         margin-bottom: 4px;
-        transition: background-color 0.3s ease;
-    }
-
-    /* Efecto hover en todos los enlaces */
-    section[data-testid="stSidebar"] a:hover {
-        background-color: #009473 !important;  /* Verde oscuro */
+    }}
+    section[data-testid="stSidebar"] a:hover {{
+        background-color: #009473 !important;
         color: white !important;
-    }
+    }}
 
+    /* Tabs superiores */
+    .top-tab {{
+        font-size: 16px;
+        margin-right: 20px;
+    }}
+    .active-tab {{
+        color: #6495ED;
+        font-weight: bold;
+    }}
+    .inactive-tab {{
+        color: #C5C4C4;
+    }}
+
+    .metric-label {{
+        font-size: 16px;
+        color: #666666;
+        text-align: center;
+    }}
+    .metric-value {{
+        font-size: 32px;
+        font-weight: bold;
+        text-align: center;
+    }}
+
+    .round-button {{
+        background-color: #515052;
+        color: white;
+        border: none;
+        border-radius: 40px;
+        padding: 20px 32px;
+        font-size: 16px;
+        font-weight: 500;
+        margin-right: 12px;
+        cursor: pointer;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
-# Definición de páginas
+# -------------------- SIDEBAR Y NAVEGACIÓN --------------------
 pages = {
-    "Bill.ai": [
+    "Bill.IA": [
         st.Page("page_dashboard_aut.py", title="Tu dinero"),
         st.Page("page_perfil_ahorro_V2.py", title="Evoluciona"),
         st.Page("page_aprende.py", title="Aprende"),
-        #st.Page("page_simulador.py", title="Simula tu ahorro"),
-        #st.Page("page_yahoo_finance.py", title="Consulta de Acciones"),
-        #st.Page("page_billi.py", title="Pregúntale a BILLI"),
-        #st.Page("page_about.py", title="Conoce el proyecto"),
-        #st.Page("test.py", title="Test"),
+
     ],
 }
 
