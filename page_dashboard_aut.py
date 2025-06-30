@@ -10,7 +10,7 @@ from utils import (
     get_promedio_gastos, proyeccion_saldo_fin_mes, ranking_gastos_categorias, ranking_ingresos_categorias,
     porcentaje_gastos_por_categoria, alerta_gasto_excesivo, sugerencia_ahorro, buscar_transacciones,
     evolucion_balance, comparativa_gastos_mensual, gastos_recurrentes, sugerencia_presupuesto, simulador_sin_gasto_en,
-    get_total_ahorrado, get_total_asignado_metas, get_ahorro_disponible,get_resumen_metas, get_recomendacion_asignacion,construir_presupuesto_asistido
+    get_total_ahorrado, get_total_asignado_metas, get_ahorro_disponible,get_resumen_metas, get_recomendacion_asignacion,construir_presupuesto_asistido,image_to_base64
 )
 from agente import crear_agente
 from datetime import datetime
@@ -21,6 +21,9 @@ import matplotlib.pyplot as plt
 import math
 import uuid
 
+# Estilo de pagina
+
+# ----------------------------------
 unique_suffix = uuid.uuid4().hex[:6] 
 # Autenticación
 authenticator = load_authenticator()
@@ -55,35 +58,9 @@ if "transacciones" not in st.session_state:
 # ───────────────────────────────────────
 # Navegación visual personalizada
 # ───────────────────────────────────────
-st.markdown("""
-    <style>
-    /* Quitar márgenes visuales y modificar estilo de los botones */
-    .stButton > button {
-        margin: 0.0px !important;
-        padding: .5rem 0.2rem;
-        font-size: 28px;
-        color: #C5C4C4 !important;
-        background-color: #ffffff;  /* Fondo oscuro personalizado */
-        border: none;
-        border-radius: 10px;
-        transition: background-color 0.3s ease;
-    }
-    .stButton > button:hover {
-        background-color: #ffffff;
-        color: #6495ED !important;
-    }
-                
-    /* Estilo para botón activo */
-    .active-button > button {
-        color: #6495ED !important;
-        font-weight: bold;
-    }
-   .stButton > button:hover {
-        background-color: #ffffff;
-        color: #ffffff;
-        }
-    </style>
-""", unsafe_allow_html=True)
+    # Tabs superiores
+
+
 
 if "seccion" not in st.session_state:
     st.session_state.seccion = "dashboard"
@@ -568,20 +545,21 @@ elif seccion == "dashboard":
         balance = ingresos + gastos
         ahorro_pct = (balance / ingresos * 100) if ingresos > 0 else 0
 
-        # Mensaje de bienvenida
+        # Imagen de Billie
+        billie_base64 = image_to_base64("billie.png")
         
-        st.markdown(f"""<h1 style='text-align: center;'>
-            Hola {name}
-        </h1>""", unsafe_allow_html=True)
-
-        st.markdown(f"""<p style='text-align: center; font-size: 20px;'>
-            Soy Billie, tu asesor financiero personal
-        </p>""", unsafe_allow_html=True)
-
-        st.markdown(f"""<p style='text-align: center; font-size: 20px;'>
-            Aquí tienes un resumen de tus finanzas de <strong>{mes_actual}</strong>
-        </p>""", unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+        # Mensaje de bienvenida
+            
+        st.markdown(f"""
+            <div style='display: flex; justify-content: center; align-items: center; gap: 16px; margin-bottom: 10px;'>
+                <img src="data:image/png;base64,{billie_base64}" width="48"/>
+                <h3 style='margin: 0; font-size: 24px;'>Hola, <strong>{name}</strong></h3>
+            </div>
+            <div style='text-align: center; margin-top: -10px;'>
+                <p style='margin: 0;'>Soy Billie, tu asesor financiero personal</p>
+                <p style='margin: 0;'>Aquí tienes un resumen de tus finanzas de <strong>{mes_actual}</strong></p>
+            </div>
+        """, unsafe_allow_html=True)        
 
         # Mostrar métricas con estilo
         col1, col2, col3 = st.columns(3)
@@ -645,7 +623,7 @@ elif seccion == "dashboard":
         # ────────────────
         # BLOQUE DE INTERACCIÓN CON BILLIE
         # ────────────────
-        st.markdown("## ¿En que puedo ayudarte hoy?")
+        st.markdown("### ¿En que puedo ayudarte hoy?")
 
         
         # Inicializar variable de respuesta fuera del flujo
