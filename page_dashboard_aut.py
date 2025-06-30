@@ -22,7 +22,35 @@ import math
 import uuid
 
 # Estilo de pagina
-
+st.markdown("""
+    <style>
+    /* Quitar márgenes visuales y modificar estilo de los botones */
+    .stButton > button {
+        margin: 0.0px !important;
+        padding: .5rem 0.2rem;
+        font-size: 28px;
+        color: #black !important;
+        background-color: #ffffff;  /* Fondo oscuro personalizado */
+        border: none;
+        border-radius: 10px;
+        transition: background-color 0.3s ease;
+    }
+    .stButton > button:hover {
+        background-color: #ffffff;
+        color: #6495ED !important;
+    }
+                
+    /* Estilo para botón activo */
+    .active-button > button {
+        color: #6495ED !important;
+        font-weight: bold;
+    }
+   .stButton > button:hover {
+        background-color: #ffffff;
+        color: #ffffff;
+        }
+    </style>
+""", unsafe_allow_html=True)
 # ----------------------------------
 unique_suffix = uuid.uuid4().hex[:6] 
 # Autenticación
