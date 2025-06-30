@@ -41,41 +41,6 @@ st.markdown(f"""
         color: white !important;
     }}
 
-    /* Tabs superiores */
-    .top-tab {{
-        font-size: 16px;
-        margin-right: 20px;
-    }}
-    .active-tab {{
-        color: #6495ED;
-        font-weight: bold;
-    }}
-    .inactive-tab {{
-        color: #C5C4C4;
-    }}
-
-    .metric-label {{
-        font-size: 16px;
-        color: #666666;
-        text-align: center;
-    }}
-    .metric-value {{
-        font-size: 32px;
-        font-weight: bold;
-        text-align: center;
-    }}
-
-    .round-button {{
-        background-color: #515052;
-        color: white;
-        border: none;
-        border-radius: 40px;
-        padding: 20px 32px;
-        font-size: 16px;
-        font-weight: 500;
-        margin-right: 12px;
-        cursor: pointer;
-    }}
     </style>
 """, unsafe_allow_html=True)
 
