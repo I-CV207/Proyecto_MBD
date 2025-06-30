@@ -8,6 +8,11 @@ from calendar import monthrange
 import yfinance as yf
 from prophet import Prophet
 import numpy as np
+import os
+from PIL import Image
+import base64
+from io import BytesIO
+
 
 def cargar_transacciones_usuario(engine, username):
     try:
@@ -583,8 +588,6 @@ def simular_inversion(monto_inicial: float, tasa_anual: float, años: int):
 def calcular_evolucion_anual(monto_inicial, tasa_anual, años):
     return [round(monto_inicial * (1 + tasa_anual) ** a, 2) for a in range(años + 1)]
 
-
-
 def forecast_yf_ticker(ticker: str, monto_inicial: float, años: int):
     try:
         #df = yf.Ticker(ticker, period="max", interval="1d", progress=False)[["Close"]].dropna()
@@ -613,4 +616,12 @@ def forecast_yf_ticker(ticker: str, monto_inicial: float, años: int):
     except Exception as e:
         return None, None, None, None, None
 
+# Función para convertir imagen a base64
+def image_to_base64(img_filename):
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '.'))
+    img_path = os.path.join(base_path, img_filename)
+    img = Image.open(img_path)
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode()
 
