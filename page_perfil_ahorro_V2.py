@@ -248,7 +248,7 @@ with st.expander("Descrubre o modifica tu perfil financiero", expanded=st.sessio
         if inversion == "Me tranquilizo, lo dejo minimo un año":
             return "Arriesgado" if comodidad in ["Relajado/a, sé que es normal en inversiones", "Me gusta la emoción, ¡es parte del juego!"] else "Moderado"
         if inversion == "Compro más acciones, es una buena oportunidad de compra":
-            return "Arriesgado" if comodidad in ["Relajado/a, sé que es normal en inversiones", "Me gusta la emoción, ¡es parte del juego!"] else "Audaz"
+            return "Arriesgado" if comodidad in ["Relajado/a, sé que es normal en inversiones", "Me gusta la emoción, ¡es parte del juego!"] else "Arriesgado"
         return "Sin clasificar"
 
     if st.button("✅ Guardar y clasificar perfil"):
