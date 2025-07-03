@@ -685,8 +685,8 @@ elif seccion == "dashboard":
             pregunta_seleccionada = "¿Me puedes sugerir una meta de ahorro?"
         elif col11.button("Proyectar saldo", key="btn11"):
             pregunta_seleccionada = "¿Cuál será mi saldo al final del mes si sigo con este ritmo?"
-        elif col12.button("Presupuesto recomendado", key="btn12"):#Check
-            pregunta_seleccionada = "¿Cuál sería un presupuesto mensual recomendado para mí?"
+        elif col12.button("Gasto por categoria", key="btn12"):#Check
+            pregunta_seleccionada = "¿Cuánto he gastado por categoría?"
 
         # Input de texto personalizado
         user_prompt_dashboard = st.chat_input(placeholder="O pregunta lo que quieras...", key=f"user_input_dashoboards_{username}")
