@@ -47,7 +47,8 @@ st.markdown(f"""
 # -------------------- SIDEBAR Y NAVEGACIÓN --------------------
 pages = {
     "Bill.IA": [
-        st.Page("page_dashboard_aut.py", title="Tu dinero"),
+        st.Page("page_tu_dinero.py", title="Tu dinero"),
+        #st.Page("page_dashboard_aut.py", title="Tu dinero"),
         st.Page("page_perfil_ahorro_V2.py", title="Evoluciona"),
         st.Page("page_aprende.py", title="Aprende"),
 
