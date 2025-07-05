@@ -15,11 +15,11 @@ def crear_agente(username,engine):
         #openai_api_key=st.secrets["openrouter"]["api_key"],
         #base_url="https://openrouter.ai/api/v1",
         #model="mistralai/mixtral-8x7b-instruct",
-        #openai_api_key=st.secrets["openai"]["api_key"],
-        #model="gpt-4",
-        openai_api_key=st.secrets["openrouter2"]["api_key"],
-        base_url="https://openrouter.ai/api/v1",
-        model="deepseek/deepseek-chat-v3-0324:free",
+        openai_api_key=st.secrets["openai"]["api_key"],
+        model="gpt-4",
+        #openai_api_key=st.secrets["openrouter2"]["api_key"],
+        #base_url="https://openrouter.ai/api/v1",
+        #model="deepseek/deepseek-chat-v3-0324:free",
 
     )
 
