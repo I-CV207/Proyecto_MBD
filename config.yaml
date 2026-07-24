@@ -19,7 +19,7 @@ credentials:
 cookie:
   name: session_cookie
   key: firma_segura_123
-  expiry_days: 30
+  expiry_days: 900
 
 preauthorized:
   emails: []
